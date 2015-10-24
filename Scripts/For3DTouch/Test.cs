@@ -10,10 +10,15 @@ using UnityEngine;
 using UnityEngine.UI;
 public class Test : MonoBehaviour
 {
-    float maximumPossibleForce = 0.0f;
+    void Awake()
+    {
+        Debug.Log("C# awake");
+    }
     // Use this for initialization
     void Start()
     {
+        Debug.Log("C# start");
+        
         if (InterfaceFor3DTouch.CheckForceTouchCapability() == 1)
         {
             InterfaceFor3DTouch.RegistTouchEventCallback(Change);

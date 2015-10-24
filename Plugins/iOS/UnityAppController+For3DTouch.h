@@ -7,6 +7,7 @@
 //
 
 #import "UnityAppController.h"
+#import <UIKit/UIApplicationShortcutItem.h>
 
 typedef void (*registTouchEventCallbackFunc)(float, float);
 
@@ -14,6 +15,6 @@ typedef void (*registTouchEventCallbackFunc)(float, float);
 
 +(void)UpdateForce:(NSSet<UITouch *>*) touches;
 +(void)TouchesEndorCancelled:(NSSet<UITouch *>*) touches;
--(BOOL)CheckForceTouchCapability;
-
+-(NSInteger)CheckForceTouchCapability;
+-(BOOL)handleShortCutItem:(UIApplicationShortcutItem*) shortcutItem;
 @end

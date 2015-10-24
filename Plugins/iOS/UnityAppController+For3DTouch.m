@@ -9,10 +9,14 @@
 #import "UnityAppController+For3DTouch.h"
 
 static BOOL isSupport3DTouch = NO;
-static registTouchEventCallbackFunc callback = nil;
+static registTouchEventCallbackFunc touchEventCallback = nil;
 
 @implementation UnityAppController (For3DTouch)
 
+
+
+#pragma mark -
+#pragma mark - about pressure sensitivity
 /**
  *  注册压力变化后的处理函数
  *
@@ -20,27 +24,27 @@ static registTouchEventCallbackFunc callback = nil;
  */
 -(void)registTouchEventCallback:(registTouchEventCallbackFunc) func
 {
-    callback = func;
+    touchEventCallback = func;
 }
-
-#pragma mark -
-#pragma mark - about pressure sensitivity
-
 
 /**
  *  检查设备是否具有3D touch功能
  *
- *  @return 结果
+ *  @return 0:not support 3d touch, 1:support
  */
--(BOOL)CheckForceTouchCapability
+-(NSInteger)CheckForceTouchCapability
 {
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 9.0) {
+        isSupport3DTouch = NO;
+        return 0;
+    }
     if(self.rootViewController.view.traitCollection.forceTouchCapability == UIForceTouchCapabilityAvailable)
     {
         isSupport3DTouch = YES;
-        return YES;
+        return 1;
     } else {
         isSupport3DTouch = NO;
-        return NO;
+        return 0;
     }
 }
 
@@ -51,8 +55,8 @@ static registTouchEventCallbackFunc callback = nil;
  */
 +(void)UpdateForce:(NSSet<UITouch *>*) touches
 {
-    if (isSupport3DTouch && callback != nil) {
-        callback(touches.anyObject.force, touches.anyObject.maximumPossibleForce);
+    if (isSupport3DTouch && touchEventCallback != nil) {
+        touchEventCallback(touches.anyObject.force, touches.anyObject.maximumPossibleForce);
     }
     
 }
@@ -62,13 +66,32 @@ static registTouchEventCallbackFunc callback = nil;
  */
 +(void)TouchesEndorCancelled:(NSSet<UITouch *>*) touches
 {
-    if (isSupport3DTouch && callback != nil) {
-        callback(0, touches.anyObject.maximumPossibleForce);
+    if (isSupport3DTouch && touchEventCallback != nil) {
+        touchEventCallback(0, touches.anyObject.maximumPossibleForce);
     }
 }
 
 #pragma mark -
 #pragma mark - about quick action
+
+/**
+ *  处理通过quick action进入应用的情况
+ *
+ *  @param shortcutItem 快捷键信息
+ *
+ *  @return 是否进行了处理
+ */
+-(BOOL)handleShortCutItem:(UIApplicationShortcutItem*) shortcutItem
+{
+    BOOL handled = NO;
+    NSString *str = (NSString *)[shortcutItem.userInfo objectForKey:@"scene"];
+    if (str != nil) {
+        handled = YES;
+        UnitySendMessage("Interface", "ExecuteQuickAction", [str UTF8String]);
+    }
+    
+    return handled;
+}
 
 
 #pragma mark -
@@ -105,8 +128,8 @@ static registTouchEventCallbackFunc callback = nil;
 #ifdef __cplusplus
 extern "C" {
 #endif
-    extern void _registTouchEventCallback(registTouchEventCallbackFunc func);
     extern int _checkForceTouchCapability();
+    extern void _registTouchEventCallback(registTouchEventCallbackFunc func);
 #ifdef __cplusplus
 }
 #endif
@@ -116,22 +139,16 @@ extern "C" {
 extern "C" {
 #endif
     
+    int _checkForceTouchCapability()
+    {
+        return (int)[(UnityAppController *)[UIApplication sharedApplication].delegate CheckForceTouchCapability];
+    }
+    
     void _registTouchEventCallback(registTouchEventCallbackFunc func)
     {
         [(UnityAppController *)[UIApplication sharedApplication].delegate registTouchEventCallback:func];
     }
-    
-    int _checkForceTouchCapability()
-    {
-        UnityAppController *uac = (UnityAppController *)[UIApplication sharedApplication].delegate;
-        if ([uac CheckForceTouchCapability]) {
-            isSupport3DTouch = YES;
-            return 1;
-        } else {
-            isSupport3DTouch = NO;
-            return 0;
-        }
-    }
+
 #ifdef __cplusplus
 }
 #endif

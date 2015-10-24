@@ -15,10 +15,12 @@ public class InterfaceFor3DTouch : MonoBehaviour
 {
     private delegate void touch_event_callback_delegate(float force, float maximumPossibleForce);
 
-    //private static touch_event_callback_delegate touch_event_callback;
+    private static Action<float, float> touchEventCallback;
+
 
     #region C code
     [DllImport("__Internal")]
+
     private static extern void _registTouchEventCallback(touch_event_callback_delegate func);
 
     [DllImport("__Internal")]
@@ -27,16 +29,10 @@ public class InterfaceFor3DTouch : MonoBehaviour
 
     #endregion
 
-    private static Action<float, float> touchEventCallback;
     public static void RegistTouchEventCallback(Action<float, float> func)
     {
         touchEventCallback = func;
         _registTouchEventCallback(ExecuteTouchEventCallback);
-
-        //  touch_event_callback = new touch_event_callback_delegate(func);
-        //  _registTouchEventCallback(Marshal.GetFunctionPointerForDelegate(touch_event_callback));
-        //  GCHandle.Alloc(touch_event_callback);
-        //  GC.KeepAlive(touch_event_callback);
     }
 
     public static int CheckForceTouchCapability()
@@ -49,4 +45,10 @@ public class InterfaceFor3DTouch : MonoBehaviour
     {
         touchEventCallback(force, maximumPossibleForce);
     }
+    
+    private void ExecuteQuickAction(string para)
+    {
+        Application.LoadLevel(para);
+    }
+    
 }
